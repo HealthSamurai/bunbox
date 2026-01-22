@@ -4,6 +4,84 @@ globs: "*.ts, *.tsx, *.html, *.css, *.js, *.jsx, package.json"
 alwaysApply: false
 ---
 
+# Bunbox - FHIR R4 Server
+
+## Quick Start
+
+```bash
+# Start PostgreSQL
+docker-compose up -d
+
+# Install dependencies
+bun install
+
+# Initialize database schema
+psql postgres://postgres:postgres@localhost:54321/bunbox < schema.sql
+
+# Run server
+bun src/index.ts
+
+# Run tests
+bun test
+```
+
+## Project Structure
+
+```
+src/
+  index.ts              # HTTP server entry point (Bun.serve)
+  db.ts                 # PostgreSQL connection, UUIDv7, table helpers
+  fhir/
+    crud.ts             # FHIR CRUD operations (create, read, update, delete, search)
+    history.ts          # Version history operations (vread, instance-history)
+    validate-patient.ts # Patient validation (original)
+    validate-patient-fast.ts # Patient validation (optimized, use this one)
+
+tests/
+  fhir-crud.test.ts     # CRUD acceptance tests
+  validate-patient*.ts  # Validation tests
+
+perf/
+  create.k6.js          # k6 load test for creates
+  read.k6.js            # k6 load test for reads
+  create-validation.k6.js # Validation overhead benchmark
+  validate-patient.bench.ts # Pure validation function benchmark
+  reports/              # Benchmark results
+```
+
+## Database
+
+- PostgreSQL with JSONB storage
+- Multi-tenant: `tenant_id` column on all tables
+- Patient-related resources have `patient_id` for efficient queries
+- History tables (`*_history`) for versioning
+- UUIDv7 for IDs (time-sortable)
+
+## API Endpoints
+
+```
+GET  /metadata              # CapabilityStatement
+GET  /:type                 # Search
+GET  /:type/:id             # Read
+GET  /:type/:id/_history    # Instance history
+GET  /:type/:id/_history/:vid # Version read
+POST /:type                 # Create
+PUT  /:type/:id             # Update
+DELETE /:type/:id           # Delete
+
+POST /$toggle-validation    # Toggle validation {"enabled": true/false}
+GET  /$validation-status    # Check validation status
+```
+
+## Performance
+
+- Create: ~12K req/s (with validation)
+- Read: ~30K req/s
+- Validation: ~2M validations/sec (optimized)
+- Validation overhead: ~3.7%
+
+## Bun Conventions
+
 Default to using Bun instead of Node.js.
 
 - Use `bun <file>` instead of `node <file>` or `ts-node <file>`
