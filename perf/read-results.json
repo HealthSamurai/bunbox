@@ -1,0 +1,12 @@
+{
+  "timestamp": "2026-01-22T14:12:55.922Z",
+  "metrics": {
+    "requests": 1129090,
+    "rps": 20504.54410036946,
+    "duration_avg": 4.305319130450276,
+    "duration_p95": 7.985,
+    "duration_p99": 0,
+    "success_rate": 1,
+    "errors": 0
+  }
+}
